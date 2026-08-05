@@ -33,3 +33,10 @@ test-results/
 
 # Legacy (superseded — Google Sheets prototype, not used)
 apps-script/
+
+# One-off data / diagnostic scripts (contain roster PII — keep local only)
+scripts/import-colleges.mjs
+scripts/diag.mjs
+scripts/verify-colleges.mjs
+scripts/unarchive-ops.mjs
+scripts/check-cron.mjs
