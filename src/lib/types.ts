@@ -61,6 +61,28 @@ export interface Comment {
   created_at: string;
 }
 
+export interface College {
+  id: string;
+  team_id: string;
+  name: string;
+  city: string | null;
+  caretaker_name: string | null;
+  caretaker_email: string | null;
+  caretaker_phone: string | null;
+  designation: string | null;
+  employee_id: string | null;
+  status: 'active' | 'on_hold' | 'closed';
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const COLLEGE_STATUS_META: Record<College['status'], { label: string; color: string }> = {
+  active: { label: 'Active', color: 'hsl(152 58% 42%)' },
+  on_hold: { label: 'On hold', color: 'hsl(36 92% 48%)' },
+  closed: { label: 'Closed', color: 'hsl(240 8% 55%)' }
+};
+
 export interface Notification {
   id: string;
   recipient_id: string;

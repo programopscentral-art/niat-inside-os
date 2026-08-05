@@ -4,7 +4,7 @@
 export const CAPS = [
   'VIEW_TEAM', 'CREATE_TASK', 'ASSIGN_TASK', 'EDIT_OWN_TASK', 'EDIT_ANY_TASK',
   'CLOSE_TASK', 'DELETE_TASK', 'COMMENT', 'SEND_EMAIL', 'MANAGE_MEMBERS',
-  'APPROVE_JOIN', 'MANAGE_TEAM'
+  'APPROVE_JOIN', 'MANAGE_TEAM', 'MANAGE_COLLEGES'
 ] as const;
 
 export type Cap = (typeof CAPS)[number];
@@ -21,7 +21,8 @@ export const CAP_LABELS: Record<Cap, string> = {
   SEND_EMAIL: 'Send email notifications',
   MANAGE_MEMBERS: 'Manage members & permissions',
   APPROVE_JOIN: 'Approve join requests',
-  MANAGE_TEAM: 'Manage team settings'
+  MANAGE_TEAM: 'Manage team settings',
+  MANAGE_COLLEGES: 'Manage college assignments'
 };
 
 export type TeamRole = 'manager' | 'lead' | 'member' | 'viewer';
