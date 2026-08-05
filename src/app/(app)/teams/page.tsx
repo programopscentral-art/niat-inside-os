@@ -41,7 +41,7 @@ export default async function TeamsPage() {
         <div className="card grid place-items-center p-10 text-sm text-fg-muted">No teams have been created yet.</div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="reveal grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {(teams ?? []).map((t: any) => {
           const isMember = memberOf.has(t.id);
           const isRequested = requested.has(t.id);

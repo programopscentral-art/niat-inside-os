@@ -72,8 +72,10 @@ export function AppShell({ userId, user, teams, unread, children }: Props) {
             const active = pathname === n.href || pathname.startsWith(n.href + '/');
             return (
               <Link key={n.href} href={n.href}
-                className={cn('flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                  active ? 'bg-primary/10 text-primary' : 'text-fg-muted hover:bg-muted hover:text-fg')}>
+                className={cn('flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all',
+                  active
+                    ? 'bg-gradient-to-r from-primary/20 to-accent/10 text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.25)]'
+                    : 'text-fg-muted hover:bg-muted hover:text-fg hover:translate-x-0.5')}>
                 <n.icon className="h-4 w-4" />
                 <span className="flex-1">{n.label}</span>
                 {'badge' in n && n.badge ? (

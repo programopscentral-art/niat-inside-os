@@ -27,18 +27,21 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'var(--font-sans)', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'monospace']
       },
       boxShadow: {
-        soft: '0 1px 2px 0 rgb(0 0 0 / 0.04), 0 4px 16px -4px rgb(0 0 0 / 0.08)',
-        glow: '0 0 0 1px hsl(var(--primary) / 0.25), 0 8px 30px -8px hsl(var(--primary) / 0.35)'
+        soft: '0 1px 2px 0 rgb(0 0 0 / 0.04), 0 8px 30px -10px rgb(0 0 0 / 0.18)',
+        glow: '0 0 0 1px hsl(var(--primary) / 0.25), 0 8px 40px -8px hsl(var(--primary) / 0.45)'
       },
       keyframes: {
-        'fade-in': { from: { opacity: '0', transform: 'translateY(4px)' }, to: { opacity: '1', transform: 'none' } },
-        shimmer: { '100%': { transform: 'translateX(100%)' } }
+        'fade-in': { from: { opacity: '0', transform: 'translateY(10px)' }, to: { opacity: '1', transform: 'none' } },
+        shimmer: { '100%': { transform: 'translateX(100%)' } },
+        float: { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } }
       },
       animation: {
-        'fade-in': 'fade-in 0.25s ease-out both'
+        'fade-in': 'fade-in 0.5s cubic-bezier(.2,.8,.2,1) both',
+        float: 'float 6s ease-in-out infinite'
       }
     }
   },

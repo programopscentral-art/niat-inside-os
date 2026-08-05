@@ -30,11 +30,11 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Welcome back, <span className="gradient-text">{first}</span> 👋</h1>
-        <p className="mt-1 text-fg-muted">Here’s what needs your attention today.</p>
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Welcome back, <span className="gradient-text">{first}</span> 👋</h1>
+        <p className="mt-2 text-fg-muted">Here’s what needs your attention today.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="reveal grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map((s) => (
           <Link key={s.label} href={s.href} className="card p-4 transition-all hover:shadow-soft hover:-translate-y-0.5">
             <div className="flex items-center justify-between">
