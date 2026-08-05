@@ -86,7 +86,7 @@ export default async function TeamBoardPage({ params }: { params: { key: string 
         </div>
       </div>
 
-      <Board tasks={(tasks ?? []) as Task[]} assignees={assignees} caps={caps} currentUserId={user.id} />
+      <Board tasks={(tasks ?? []) as Task[]} assignees={assignees} caps={caps} currentUserId={user.id} teamId={team.id} />
     </div>
   );
 }

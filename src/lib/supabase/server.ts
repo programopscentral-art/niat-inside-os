@@ -9,6 +9,8 @@ import { PUBLIC_ENV } from '../env';
 export function createSupabaseServer() {
   const cookieStore = cookies();
   return createServerClient(PUBLIC_ENV.SUPABASE_URL, PUBLIC_ENV.SUPABASE_ANON_KEY, {
+    // Never let Next's Data Cache serve stale rows — every read must be live.
+    global: { fetch: (url: any, options: any = {}) => fetch(url, { ...options, cache: 'no-store' }) },
     cookies: {
       getAll() {
         return cookieStore.getAll();

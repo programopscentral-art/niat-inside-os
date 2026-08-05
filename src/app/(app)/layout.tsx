@@ -2,6 +2,9 @@ import { requireUser, getMyTeams, isAdmin } from '@/lib/auth';
 import { createSupabaseServer } from '@/lib/supabase/server';
 import { AppShell } from '@/components/shell/app-shell';
 
+// Always render fresh — this app is entirely per-user, live data.
+export const dynamic = 'force-dynamic';
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
   const teams = await getMyTeams();
@@ -14,6 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <AppShell
+      userId={user.id}
       user={{
         name: user.profile.full_name || user.email,
         email: user.email,

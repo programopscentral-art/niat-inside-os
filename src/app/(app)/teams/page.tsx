@@ -4,6 +4,7 @@ import { requireUser } from '@/lib/auth';
 import { createSupabaseServer } from '@/lib/supabase/server';
 import { TeamKeyBadge } from '@/components/ui/badges';
 import { JoinButton } from '@/components/team/join-button';
+import { Realtime } from '@/components/realtime';
 
 export default async function TeamsPage() {
   const user = await requireUser();
@@ -26,6 +27,11 @@ export default async function TeamsPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
+      <Realtime channel="teams-browse" subs={[
+        { table: 'teams' },
+        { table: 'join_requests', filter: `user_id=eq.${user.id}` },
+        { table: 'team_members', filter: `user_id=eq.${user.id}` }
+      ]} />
       <div>
         <h1 className="text-2xl font-bold">Teams</h1>
         <p className="mt-1 text-fg-muted">Browse teams and request to join. You’ll only see a team’s work once you’re a member.</p>

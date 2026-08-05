@@ -6,6 +6,7 @@ import { createSupabaseServer } from '@/lib/supabase/server';
 import { effectiveCaps, CAPS, type TeamRole } from '@/lib/capabilities';
 import { TeamKeyBadge } from '@/components/ui/badges';
 import { ManagePanel } from '@/components/team/manage-panel';
+import { Realtime } from '@/components/realtime';
 
 export default async function ManageTeamPage({ params }: { params: { key: string } }) {
   const user = await requireUser();
@@ -33,6 +34,10 @@ export default async function ManageTeamPage({ params }: { params: { key: string
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
+      <Realtime channel={`manage:${team.id}`} subs={[
+        { table: 'join_requests', filter: `team_id=eq.${team.id}` },
+        { table: 'team_members', filter: `team_id=eq.${team.id}` }
+      ]} />
       <Link href={`/teams/${team.team_key}`} className="inline-flex items-center gap-1.5 text-sm text-fg-muted hover:text-fg"><ArrowLeft className="h-4 w-4" /> Back to board</Link>
       <div className="flex items-center gap-2">
         <TeamKeyBadge k={team.team_key} />

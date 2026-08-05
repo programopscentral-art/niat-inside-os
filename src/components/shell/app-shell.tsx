@@ -7,17 +7,19 @@ import {
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { TeamKeyBadge } from '@/components/ui/badges';
+import { Realtime } from '@/components/realtime';
 import { cn } from '@/lib/utils';
 
 interface TeamLink { team_key: string; name: string; }
 interface Props {
+  userId: string;
   user: { name: string; email: string; avatar: string | null; isAdmin: boolean };
   teams: TeamLink[];
   unread: number;
   children: React.ReactNode;
 }
 
-export function AppShell({ user, teams, unread, children }: Props) {
+export function AppShell({ userId, user, teams, unread, children }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [dark, setDark] = useState(false);
@@ -50,6 +52,11 @@ export function AppShell({ user, teams, unread, children }: Props) {
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
+      {/* Live: my notifications + my team memberships (join approvals, removals) */}
+      <Realtime channel={`me:${userId}`} subs={[
+        { table: 'notifications', filter: `recipient_id=eq.${userId}` },
+        { table: 'team_members', filter: `user_id=eq.${userId}` }
+      ]} />
       {/* Sidebar */}
       <aside className={cn(
         'fixed inset-y-0 left-0 z-40 w-[260px] glass border-r border-border p-4 flex flex-col transition-transform lg:static lg:translate-x-0',

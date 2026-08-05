@@ -1,19 +1,22 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, AlertCircle, CalendarClock, GripVertical } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 import { Avatar } from '@/components/ui/avatar';
 import { PriorityBadge } from '@/components/ui/badges';
+import { Realtime } from '@/components/realtime';
 import { updateTask } from '@/lib/actions/tasks';
 import { BOARD_COLUMNS, STATUS_META, type Task, type TaskStatus } from '@/lib/types';
 import { isOverdue, cn } from '@/lib/utils';
 
 type Assignee = { full_name: string | null; email: string; avatar_url: string | null };
 
-export function Board({ tasks: initial, assignees, caps, currentUserId }:
-  { tasks: Task[]; assignees: Record<string, Assignee>; caps: string[]; currentUserId: string }) {
+export function Board({ tasks: initial, assignees, caps, currentUserId, teamId }:
+  { tasks: Task[]; assignees: Record<string, Assignee>; caps: string[]; currentUserId: string; teamId: string }) {
   const [tasks, setTasks] = useState(initial);
+  // Reconcile with fresh server data after any router.refresh() (realtime).
+  useEffect(() => { setTasks(initial); }, [initial]);
   const [q, setQ] = useState('');
   const [priority, setPriority] = useState('');
   const [mineOnly, setMineOnly] = useState(false);
@@ -51,6 +54,7 @@ export function Board({ tasks: initial, assignees, caps, currentUserId }:
 
   return (
     <div className="space-y-4">
+      <Realtime channel={`board:${teamId}`} subs={[{ table: 'tasks', filter: `team_id=eq.${teamId}` }]} />
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-48 max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-muted" />

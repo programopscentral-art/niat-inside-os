@@ -25,18 +25,26 @@ export async function requestJoin(teamId: string, message: string): Promise<Resu
     return { ok: false, error: error.message };
   }
 
-  // Notify approvers (managers) of the team.
+  // Notify approvers: the team's managers/leads AND every super admin.
   const { data: team } = await supabase.from('teams').select('name').eq('id', teamId).single();
   const { data: approvers } = await supabase
     .from('team_members').select('user_id, team_role').eq('team_id', teamId).eq('status', 'active');
+  const { data: admins } = await supabase
+    .from('profiles').select('id').eq('global_role', 'super_admin').eq('status', 'active');
+
+  const recipients = new Set<string>();
   for (const a of approvers ?? []) {
-    if (a.team_role === 'manager' || a.team_role === 'lead') {
-      await notify({
-        recipientId: a.user_id, type: 'join_request', teamId,
-        title: 'New join request',
-        body: `${user.profile.full_name || user.email} requested to join ${team?.name ?? 'your team'}.`
-      });
-    }
+    if (a.team_role === 'manager' || a.team_role === 'lead') recipients.add(a.user_id);
+  }
+  for (const ad of admins ?? []) recipients.add(ad.id);
+  recipients.delete(user.id);
+
+  for (const rid of recipients) {
+    await notify({
+      recipientId: rid, type: 'join_request', teamId,
+      title: 'New join request',
+      body: `${user.profile.full_name || user.email} requested to join ${team?.name ?? 'a team'}.`
+    });
   }
 
   await audit({ actorId: user.id, action: 'join.request', entityType: 'team', entityId: teamId, teamId });

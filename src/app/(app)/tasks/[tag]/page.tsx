@@ -8,6 +8,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Markdown } from '@/components/ui/markdown';
 import { TaskSidebar } from '@/components/task/task-sidebar';
 import { AddComment } from '@/components/task/add-comment';
+import { Realtime } from '@/components/realtime';
 import { timeAgo } from '@/lib/utils';
 import type { Task } from '@/lib/types';
 
@@ -64,6 +65,10 @@ export default async function TaskPage({ params }: { params: { tag: string } }) 
 
   return (
     <div className="mx-auto max-w-6xl space-y-5">
+      <Realtime channel={`task:${t.id}`} subs={[
+        { table: 'comments', filter: `task_id=eq.${t.id}` },
+        { table: 'tasks', filter: `id=eq.${t.id}` }
+      ]} />
       <Link href={`/teams/${team?.team_key}`} className="inline-flex items-center gap-1.5 text-sm text-fg-muted hover:text-fg">
         <ArrowLeft className="h-4 w-4" /> {team?.name}
       </Link>
