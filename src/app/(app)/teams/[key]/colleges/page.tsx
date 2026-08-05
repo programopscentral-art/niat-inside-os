@@ -25,6 +25,8 @@ export default async function CollegesPage({ params }: { params: { key: string }
 
   const caps = admin ? [...CAPS] : (membership ? [...effectiveCaps(membership.team_role as TeamRole, membership.permissions ?? [])] : []);
   const canManage = admin || caps.includes('MANAGE_COLLEGES');
+  const canCreateTask = admin || caps.includes('CREATE_TASK');
+  const canAssign = admin || caps.includes('ASSIGN_TASK');
 
   const [{ data: colleges }, { data: members }] = await Promise.all([
     supabase.from('colleges').select('*').eq('team_id', team.id).order('name'),
@@ -47,7 +49,8 @@ export default async function CollegesPage({ params }: { params: { key: string }
         Who takes care of which university. {canManage ? 'Add or edit below.' : 'Read-only — ask a manager to make changes.'}
       </p>
 
-      <CollegesPanel teamId={team.id} colleges={(colleges ?? []) as College[]} canManage={canManage} members={memberList} />
+      <CollegesPanel teamId={team.id} colleges={(colleges ?? []) as College[]} canManage={canManage}
+        canCreateTask={canCreateTask} canAssign={canAssign} members={memberList} />
     </div>
   );
 }

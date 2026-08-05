@@ -1,14 +1,15 @@
 'use client';
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, Pencil, Trash2, Building2, Phone, Mail, IdCard, MapPin, User } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Building2, Phone, Mail, IdCard, MapPin, User, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { PersonPicker } from '@/components/ui/person-picker';
 import { Avatar } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/toast';
 import { createCollege, updateCollege, deleteCollege } from '@/lib/actions/colleges';
-import { COLLEGE_STATUS_META, type College } from '@/lib/types';
+import { createTask } from '@/lib/actions/tasks';
+import { COLLEGE_STATUS_META, type College, type TaskPriority } from '@/lib/types';
 
 interface Member { email: string; full_name: string | null; }
 interface Form {
@@ -22,8 +23,8 @@ const EMPTY: Form = {
   designation: '', employee_id: '', status: 'active', notes: ''
 };
 
-export function CollegesPanel({ teamId, colleges, canManage, members }:
-  { teamId: string; colleges: College[]; canManage: boolean; members: Member[] }) {
+export function CollegesPanel({ teamId, colleges, canManage, canCreateTask, canAssign, members }:
+  { teamId: string; colleges: College[]; canManage: boolean; canCreateTask?: boolean; canAssign?: boolean; members: Member[] }) {
   const router = useRouter();
   const { toast } = useToast();
   const [pending, start] = useTransition();
@@ -31,6 +32,10 @@ export function CollegesPanel({ teamId, colleges, canManage, members }:
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Form>(EMPTY);
+
+  // Raise-ticket dialog state
+  const [ticketFor, setTicketFor] = useState<College | null>(null);
+  const [tk, setTk] = useState({ title: '', description: '', priority: 'MEDIUM' as TaskPriority, due: '', assignee: '', notify: false });
 
   const filtered = useMemo(() => {
     const ql = q.toLowerCase();
@@ -61,6 +66,32 @@ export function CollegesPanel({ teamId, colleges, canManage, members }:
   function remove(c: College) {
     if (!window.confirm(`Delete "${c.name}"? This cannot be undone.`)) return;
     start(async () => { const r = await deleteCollege(c.id); if (r.ok) { toast('Deleted', 'success'); router.refresh(); } else toast(r.error, 'error'); });
+  }
+
+  function openTicket(c: College) {
+    const caretakerIsMember = !!c.caretaker_email && members.some((m) => m.email === c.caretaker_email);
+    const where = c.city ? `${c.name} (${c.city})` : c.name;
+    setTicketFor(c);
+    setTk({
+      title: `${c.name}: `,
+      description: `**College:** ${where}\n**Caretaker:** ${c.caretaker_name || '—'}${c.caretaker_email ? ` (${c.caretaker_email})` : ''}\n\n`,
+      priority: 'MEDIUM',
+      due: '',
+      assignee: canAssign && caretakerIsMember ? c.caretaker_email! : '',
+      notify: false
+    });
+  }
+
+  function submitTicket() {
+    if (!ticketFor) return;
+    start(async () => {
+      const r = await createTask({
+        teamId, title: tk.title.trim(), description: tk.description, priority: tk.priority,
+        assigneeEmail: tk.assignee, dueDate: tk.due, labels: [ticketFor.name], notifyEmail: tk.notify
+      });
+      if (r.ok) { toast(`Created ${r.data?.tag}`, 'success'); setTicketFor(null); router.push(`/tasks/${r.data?.tag}`); }
+      else toast(r.error, 'error');
+    });
   }
 
   return (
@@ -115,10 +146,12 @@ export function CollegesPanel({ teamId, colleges, canManage, members }:
                 {c.notes && <p className="mt-1 rounded-md bg-muted p-2 text-xs">{c.notes}</p>}
               </div>
 
-              {canManage && (
-                <div className="mt-3 flex justify-end gap-1 border-t border-border pt-2">
-                  <Button size="sm" variant="ghost" onClick={() => openEdit(c)}><Pencil className="h-3.5 w-3.5" /> Edit</Button>
-                  <button className="rounded-md px-2 text-fg-muted hover:text-danger" onClick={() => remove(c)} title="Delete"><Trash2 className="h-4 w-4" /></button>
+              {(canManage || canCreateTask) && (
+                <div className="mt-3 flex items-center gap-1 border-t border-border pt-2">
+                  {canCreateTask && <Button size="sm" variant="outline" onClick={() => openTicket(c)}><Ticket className="h-3.5 w-3.5" /> Raise ticket</Button>}
+                  <div className="flex-1" />
+                  {canManage && <Button size="sm" variant="ghost" onClick={() => openEdit(c)}><Pencil className="h-3.5 w-3.5" /> Edit</Button>}
+                  {canManage && <button className="rounded-md px-2 text-fg-muted hover:text-danger" onClick={() => remove(c)} title="Delete"><Trash2 className="h-4 w-4" /></button>}
                 </div>
               )}
             </div>
@@ -164,6 +197,40 @@ export function CollegesPanel({ teamId, colleges, canManage, members }:
           <div className="flex justify-end gap-2 pt-1">
             <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
             <Button loading={pending} onClick={save}>{editId ? 'Save changes' : 'Add college'}</Button>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog open={!!ticketFor} onClose={() => setTicketFor(null)} title={`Raise a ticket for ${ticketFor?.name ?? ''}`} className="max-w-xl">
+        <div className="space-y-3">
+          <div><label className="label">Title *</label>
+            <input autoFocus className="input" value={tk.title} onChange={(e) => setTk((s) => ({ ...s, title: e.target.value }))} placeholder="What needs to be done?" />
+          </div>
+          <div><label className="label">Description</label>
+            <textarea className="input min-h-28" value={tk.description} onChange={(e) => setTk((s) => ({ ...s, description: e.target.value }))} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className="label">Priority</label>
+              <select className="input" value={tk.priority} onChange={(e) => setTk((s) => ({ ...s, priority: e.target.value as TaskPriority }))}>
+                {['LOW', 'MEDIUM', 'HIGH', 'URGENT'].map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <div><label className="label">Due date</label>
+              <input type="date" className="input" value={tk.due} onChange={(e) => setTk((s) => ({ ...s, due: e.target.value }))} />
+            </div>
+          </div>
+          {canAssign && (
+            <div><label className="label">Assign to</label>
+              <PersonPicker people={members} value={tk.assignee || undefined} allowUnassign
+                onSelect={(email) => setTk((s) => ({ ...s, assignee: email }))} placeholder="Search team members…" />
+              {tk.assignee && <label className="mt-2 flex items-center gap-2 text-xs text-fg-muted">
+                <input type="checkbox" checked={tk.notify} onChange={(e) => setTk((s) => ({ ...s, notify: e.target.checked }))} /> Email the assignee
+              </label>}
+            </div>
+          )}
+          <div className="flex justify-end gap-2 pt-1">
+            <Button variant="ghost" onClick={() => setTicketFor(null)}>Cancel</Button>
+            <Button loading={pending} onClick={submitTicket}>Create ticket</Button>
           </div>
         </div>
       </Dialog>
