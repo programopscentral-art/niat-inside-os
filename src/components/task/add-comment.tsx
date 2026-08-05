@@ -3,6 +3,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PersonPicker } from '@/components/ui/person-picker';
 import { useToast } from '@/components/ui/toast';
 import { addComment } from '@/lib/actions/comments';
 
@@ -22,10 +23,18 @@ export function AddComment({ taskId, canEmail }: { taskId: string; canEmail: boo
     });
   }
 
+  function mention(em: string) {
+    if (!em) return;
+    setBody((b) => (b.trim() ? b.replace(/\s*$/, ' ') : '') + `@${em} `);
+  }
+
   return (
     <div className="card p-3">
       <textarea className="input min-h-20 resize-y" value={body} onChange={(e) => setBody(e.target.value)}
-        placeholder="Write a comment. Tag anyone with @their.email@nxtwave.co.in — they’ll get access to this ticket." />
+        placeholder="Write a comment. Mention anyone to give them access to this ticket." />
+      <div className="mt-2">
+        <PersonPicker orgSearch placeholder="@ Mention someone…" onSelect={mention} />
+      </div>
       <div className="mt-2 flex items-center justify-between">
         {canEmail ? (
           <label className="flex items-center gap-2 text-xs text-fg-muted">

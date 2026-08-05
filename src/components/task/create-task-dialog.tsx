@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
+import { PersonPicker } from '@/components/ui/person-picker';
 import { useToast } from '@/components/ui/toast';
 import { createTask } from '@/lib/actions/tasks';
 import type { TaskPriority } from '@/lib/types';
@@ -70,10 +71,8 @@ export function CreateTaskDialog({ teamId, members, canAssign, canEmail }:
           {canAssign && (
             <div>
               <label className="label">Assignee</label>
-              <select className="input" value={assignee} onChange={(e) => setAssignee(e.target.value)}>
-                <option value="">Unassigned</option>
-                {members.map((m) => <option key={m.email} value={m.email}>{m.full_name || m.email}</option>)}
-              </select>
+              <PersonPicker people={members} value={assignee} allowUnassign
+                onSelect={setAssignee} placeholder="Search team members…" />
             </div>
           )}
           <div>

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Settings2, Lock } from 'lucide-react';
+import { Settings2, Lock, BarChart3 } from 'lucide-react';
 import { requireUser, isAdmin } from '@/lib/auth';
 import { createSupabaseServer } from '@/lib/supabase/server';
 import { effectiveCaps, ROLE_LABELS, CAPS, type TeamRole } from '@/lib/capabilities';
@@ -77,6 +77,7 @@ export default async function TeamBoardPage({ params }: { params: { key: string 
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Link href={`/teams/${team.team_key}/analytics`} className="btn btn-outline btn-md"><BarChart3 className="h-4 w-4" /> Insights</Link>
           {canManage && (
             <Link href={`/teams/${team.team_key}/manage`} className="btn btn-outline btn-md"><Settings2 className="h-4 w-4" /> Manage</Link>
           )}

@@ -8,6 +8,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Markdown } from '@/components/ui/markdown';
 import { TaskSidebar } from '@/components/task/task-sidebar';
 import { AddComment } from '@/components/task/add-comment';
+import { ActivityTimeline } from '@/components/task/activity-timeline';
 import { Realtime } from '@/components/realtime';
 import { timeAgo } from '@/lib/utils';
 import type { Task } from '@/lib/types';
@@ -63,6 +64,8 @@ export default async function TaskPage({ params }: { params: { tag: string } }) 
   const watchers = (watchersRows ?? []).map((w: any) => pmap[w.user_id]).filter(Boolean);
   const memberList = (members ?? []).map((m: any) => ({ email: m.profiles?.email, full_name: m.profiles?.full_name })).filter((m: any) => m.email);
 
+  const { data: activity } = await supabase.rpc('task_activity', { p_task: t.id });
+
   return (
     <div className="mx-auto max-w-6xl space-y-5">
       <Realtime channel={`task:${t.id}`} subs={[
@@ -113,6 +116,8 @@ export default async function TaskPage({ params }: { params: { tag: string } }) 
             </div>
             {caps.includes('COMMENT') && <AddComment taskId={t.id} canEmail={caps.includes('SEND_EMAIL')} />}
           </div>
+
+          <ActivityTimeline items={(activity ?? []) as any} />
         </div>
 
         <TaskSidebar task={t} caps={caps} members={memberList} watchers={watchers} assignee={assignee} currentUserId={user.id} />

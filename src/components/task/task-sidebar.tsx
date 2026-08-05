@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { UserPlus, Tag, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
+import { PersonPicker } from '@/components/ui/person-picker';
 import { useToast } from '@/components/ui/toast';
 import { updateTask, assignTask, addWatcher } from '@/lib/actions/tasks';
 import { TASK_STATUS_ALL } from '@/lib/board-const';
@@ -26,8 +27,6 @@ export function TaskSidebar({ task, caps, members, watchers, assignee, currentUs
   const [progress, setProgress] = useState(task.progress);
   const [due, setDue] = useState(task.due_date ?? '');
   const [remarks, setRemarks] = useState(task.remarks ?? '');
-  const [assignEmail, setAssignEmail] = useState('');
-  const [tagEmail, setTagEmail] = useState('');
   const [emailOnTag, setEmailOnTag] = useState(false);
 
   function run(fn: () => Promise<{ ok: boolean; error?: string }>, okMsg: string) {
@@ -89,14 +88,8 @@ export function TaskSidebar({ task, caps, members, watchers, assignee, currentUs
           {assignee && <span className="text-sm">{assignee.full_name || assignee.email}</span>}
         </div>
         {has('ASSIGN_TASK') && (
-          <div className="flex gap-2">
-            <select className="input" value={assignEmail} onChange={(e) => setAssignEmail(e.target.value)}>
-              <option value="">Reassign to…</option>
-              {members.map((m) => <option key={m.email} value={m.email}>{m.full_name || m.email}</option>)}
-            </select>
-            <Button size="sm" disabled={!assignEmail} loading={pending}
-              onClick={() => run(() => assignTask(task.id, assignEmail, false), 'Reassigned')}>Set</Button>
-          </div>
+          <PersonPicker people={members} placeholder="Reassign to…"
+            onSelect={(email) => email && run(() => assignTask(task.id, email, false), 'Reassigned')} />
         )}
       </div>
 
@@ -108,15 +101,10 @@ export function TaskSidebar({ task, caps, members, watchers, assignee, currentUs
         </div>
         {(has('ASSIGN_TASK') || task.created_by === currentUserId) && (
           <div className="space-y-2">
-            <div className="flex gap-2">
-              <input className="input" placeholder="someone@nxtwave.co.in" value={tagEmail} onChange={(e) => setTagEmail(e.target.value)} />
-              <Button size="sm" disabled={!tagEmail} loading={pending}
-                onClick={() => run(async () => { const r = await addWatcher(task.id, tagEmail, emailOnTag); if (r.ok) setTagEmail(''); return r; }, 'Tagged')}>
-                <UserPlus className="h-3.5 w-3.5" /> Tag
-              </Button>
-            </div>
+            <PersonPicker orgSearch placeholder="Tag anyone by name or email…"
+              onSelect={(email) => email && run(() => addWatcher(task.id, email, emailOnTag), 'Tagged')} />
             <label className="flex items-center gap-2 text-xs text-fg-muted">
-              <input type="checkbox" checked={emailOnTag} onChange={(e) => setEmailOnTag(e.target.checked)} /> Email them
+              <input type="checkbox" checked={emailOnTag} onChange={(e) => setEmailOnTag(e.target.checked)} /> Email people I tag
             </label>
           </div>
         )}
