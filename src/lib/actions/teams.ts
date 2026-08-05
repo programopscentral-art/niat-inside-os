@@ -73,15 +73,20 @@ export async function assignManager(teamId: string, email: string): Promise<Resu
   return { ok: true };
 }
 
-export async function archiveTeam(teamId: string): Promise<Result> {
+export async function setTeamStatus(teamId: string, status: 'active' | 'archived'): Promise<Result> {
   const user = await requireUser();
   if (!isAdmin(user)) {
     try { await requireCap(teamId, 'MANAGE_TEAM'); } catch { return { ok: false, error: 'Not allowed.' }; }
   }
   const supabase = createSupabaseServer();
-  const { error } = await supabase.from('teams').update({ status: 'archived' }).eq('id', teamId);
+  const { error } = await supabase.from('teams').update({ status }).eq('id', teamId);
   if (error) return { ok: false, error: error.message };
-  await audit({ actorId: user.id, action: 'team.archive', entityType: 'team', entityId: teamId, teamId });
+  await audit({ actorId: user.id, action: 'team.' + (status === 'archived' ? 'archive' : 'unarchive'), entityType: 'team', entityId: teamId, teamId });
   revalidatePath('/admin'); revalidatePath('/teams');
   return { ok: true };
+}
+
+/** @deprecated use setTeamStatus */
+export async function archiveTeam(teamId: string): Promise<Result> {
+  return setTeamStatus(teamId, 'archived');
 }

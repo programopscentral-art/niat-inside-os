@@ -130,10 +130,10 @@ export function ManagePanel({ teamId, teamKey, members, requests, canManageMembe
       <Dialog open={addOpen} onClose={() => setAddOpen(false)} title="Add member">
         <div className="space-y-3">
           <div><label className="label">Email (@nxtwave.co.in)</label><input className="input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="person@nxtwave.co.in" /></div>
-          <div><label className="label">Role</label>
+          <div><label className="label">Join as</label>
             <select className="input" value={role} onChange={(e) => setRole(e.target.value as TeamRole)}>{ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}</select>
           </div>
-          <div><label className="label">Extra permissions (beyond role defaults)</label><PermissionMatrix role={role} extra={extra} onToggle={toggle(extra, setExtra)} /></div>
+          <div><label className="label">Extra privileges (optional, beyond role defaults)</label><PermissionMatrix role={role} extra={extra} onToggle={toggle(extra, setExtra)} /></div>
           <div className="flex justify-end gap-2 pt-1">
             <Button variant="ghost" onClick={() => setAddOpen(false)}>Cancel</Button>
             <Button loading={pending} onClick={() => run(() => addMember(teamId, email, role, [...extra]), 'Member added', () => { setAddOpen(false); setEmail(''); })}>Add</Button>
@@ -158,11 +158,12 @@ export function ManagePanel({ teamId, teamKey, members, requests, canManageMembe
       {/* Approve request */}
       <Dialog open={!!approving} onClose={() => setApproving(null)} title="Approve join request">
         <div className="space-y-3">
-          <p className="text-sm text-fg-muted">Grant <b>{approving?.profile?.full_name || approving?.profile?.email}</b> access with:</p>
-          <div><label className="label">Role</label>
+          <p className="text-sm text-fg-muted"><b>{approving?.profile?.full_name || approving?.profile?.email}</b> will join the team. They’ll only see this team’s tasks — never admin settings or other teams.</p>
+          <div><label className="label">Join as</label>
             <select className="input" value={apprRole} onChange={(e) => setApprRole(e.target.value as TeamRole)}>{ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}</select>
+            <p className="mt-1 text-xs text-fg-muted">Most people join as <b>Member</b> (view, create & comment on tasks). Pick a higher role or grant extra privileges below only if needed.</p>
           </div>
-          <div><label className="label">Extra permissions</label><PermissionMatrix role={apprRole} extra={apprExtra} onToggle={toggle(apprExtra, setApprExtra)} /></div>
+          <div><label className="label">Extra privileges (optional)</label><PermissionMatrix role={apprRole} extra={apprExtra} onToggle={toggle(apprExtra, setApprExtra)} /></div>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={apprEmail} onChange={(e) => setApprEmail(e.target.checked)} /> Email them the decision</label>
           <div className="flex justify-end gap-2 pt-1">
             <Button variant="ghost" onClick={() => setApproving(null)}>Cancel</Button>

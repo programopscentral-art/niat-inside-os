@@ -1,13 +1,13 @@
 'use client';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, ShieldCheck, ShieldOff, UserCog, Archive } from 'lucide-react';
+import { Plus, ShieldCheck, ShieldOff, UserCog, Archive, ArchiveRestore } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Avatar } from '@/components/ui/avatar';
 import { TeamKeyBadge } from '@/components/ui/badges';
 import { useToast } from '@/components/ui/toast';
-import { createTeam, assignManager, archiveTeam } from '@/lib/actions/teams';
+import { createTeam, assignManager, setTeamStatus } from '@/lib/actions/teams';
 import { setGlobalRole, setUserStatus } from '@/lib/actions/admin';
 
 interface TeamRow { id: string; team_key: string; name: string; description: string | null; status: string; members: number; manager: string | null; }
@@ -47,7 +47,11 @@ export function AdminConsole({ teams, users, currentUserId }: { teams: TeamRow[]
                   <div className="truncate text-xs text-fg-muted">{t.members} members · Manager: {t.manager || '—'}</div>
                 </div>
                 <Button size="sm" variant="outline" onClick={() => { setAssignFor(t); setAssignEmail(''); }}><UserCog className="h-4 w-4" /> Manager</Button>
-                {t.status !== 'archived' && <button className="text-fg-muted hover:text-danger" title="Archive" onClick={() => run(() => archiveTeam(t.id), 'Team archived')}><Archive className="h-4 w-4" /></button>}
+                {t.status !== 'archived'
+                  ? <button className="text-fg-muted hover:text-danger" title="Archive team"
+                      onClick={() => { if (window.confirm(`Archive "${t.name}"? Existing members keep access, but it disappears from the join list until you unarchive it.`)) run(() => setTeamStatus(t.id, 'archived'), 'Team archived'); }}>
+                      <Archive className="h-4 w-4" /></button>
+                  : <Button size="sm" variant="outline" onClick={() => run(() => setTeamStatus(t.id, 'active'), 'Team restored')}><ArchiveRestore className="h-4 w-4" /> Unarchive</Button>}
               </div>
             ))}
             {teams.length === 0 && <div className="card p-8 text-center text-sm text-fg-muted">No teams yet — create the first one.</div>}
