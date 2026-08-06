@@ -30,6 +30,13 @@ export function isOverdue(due?: string | null, status?: string) {
   return new Date(due) < today;
 }
 
+/** Return the URL only if it is a safe http(s) link (blocks javascript: etc.). */
+export function safeUrl(url?: string | null): string | null {
+  if (!url) return null;
+  const u = url.trim();
+  return /^https?:\/\//i.test(u) ? u : null;
+}
+
 /** Extract @mentions (emails) from comment text. */
 export function extractMentions(body: string): string[] {
   const re = /@([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;

@@ -24,9 +24,10 @@ export function CreateTaskDialog({ teamId, members, canAssign, canEmail }:
   const [assignee, setAssignee] = useState('');
   const [due, setDue] = useState('');
   const [labels, setLabels] = useState('');
+  const [sheet, setSheet] = useState('');
   const [notifyEmail, setNotifyEmail] = useState(false);
 
-  function reset() { setTitle(''); setDescription(''); setPriority('MEDIUM'); setAssignee(''); setDue(''); setLabels(''); setNotifyEmail(false); }
+  function reset() { setTitle(''); setDescription(''); setPriority('MEDIUM'); setAssignee(''); setDue(''); setLabels(''); setSheet(''); setNotifyEmail(false); }
 
   function submit() {
     start(async () => {
@@ -34,6 +35,7 @@ export function CreateTaskDialog({ teamId, members, canAssign, canEmail }:
         teamId, title, description, priority,
         assigneeEmail: assignee, dueDate: due,
         labels: labels.split(',').map((s) => s.trim()).filter(Boolean),
+        sheet_url: sheet,
         notifyEmail
       });
       if (r.ok) {
@@ -78,6 +80,10 @@ export function CreateTaskDialog({ teamId, members, canAssign, canEmail }:
           <div>
             <label className="label">Labels (comma-separated)</label>
             <input className="input" value={labels} onChange={(e) => setLabels(e.target.value)} placeholder="frontend, urgent, q3" />
+          </div>
+          <div>
+            <label className="label">Google Sheet link (optional)</label>
+            <input className="input" value={sheet} onChange={(e) => setSheet(e.target.value)} placeholder="https://docs.google.com/spreadsheets/…" />
           </div>
           {canAssign && canEmail && assignee && (
             <label className="flex items-center gap-2 text-sm">

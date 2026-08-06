@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, AlertCircle, CalendarClock, GripVertical } from 'lucide-react';
+import { Search, AlertCircle, CalendarClock, GripVertical, Sheet } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 import { Avatar } from '@/components/ui/avatar';
 import { PriorityBadge } from '@/components/ui/badges';
@@ -98,7 +98,10 @@ export function Board({ tasks: initial, assignees, caps, currentUserId, teamId }
                       <div className="flex items-center gap-1.5">
                         {movable && <GripVertical className="h-3.5 w-3.5 text-fg-muted opacity-0 group-hover:opacity-100" />}
                         <span className="font-mono text-[11px] font-semibold text-primary">{t.tag}</span>
-                        <div className="ml-auto"><PriorityBadge priority={t.priority} /></div>
+                        <div className="ml-auto flex items-center gap-1.5">
+                          {t.sheet_url && <Sheet className="h-3 w-3" style={{ color: 'hsl(152 58% 42%)' }} />}
+                          <PriorityBadge priority={t.priority} />
+                        </div>
                       </div>
                       <div className="mt-1.5 text-sm font-medium leading-snug line-clamp-2">{t.title}</div>
                       {t.progress > 0 && t.status !== 'DONE' && (

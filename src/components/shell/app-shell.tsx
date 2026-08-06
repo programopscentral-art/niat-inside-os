@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard, Users2, Bell, Shield, Search, Moon, Sun, LogOut, Menu, X, Hash
+  LayoutDashboard, Users2, Bell, Shield, Search, Moon, Sun, LogOut, Menu, X, Ticket
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { TeamKeyBadge } from '@/components/ui/badges';
@@ -47,6 +47,7 @@ export function AppShell({ userId, user, teams, unread, children }: Props) {
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/teams', label: 'Teams', icon: Users2 },
     { href: '/notifications', label: 'Notifications', icon: Bell, badge: unread },
+    { href: '/tickets', label: 'Tickets', icon: Ticket },
     ...(user.isAdmin ? [{ href: '/admin', label: 'Admin', icon: Shield }] : [])
   ];
 

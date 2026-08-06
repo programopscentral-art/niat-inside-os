@@ -50,6 +50,7 @@ export interface Task {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  sheet_url: string | null;
 }
 
 export interface Comment {
@@ -73,8 +74,20 @@ export interface College {
   employee_id: string | null;
   status: 'active' | 'on_hold' | 'closed';
   notes: string | null;
+  sheet_url: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface CollegePerson {
+  id: string;
+  college_id: string;
+  name: string;
+  employee_id: string | null;
+  mobile: string | null;
+  email: string | null;
+  designation: string | null;
+  created_at: string;
 }
 
 export const COLLEGE_STATUS_META: Record<College['status'], { label: string; color: string }> = {

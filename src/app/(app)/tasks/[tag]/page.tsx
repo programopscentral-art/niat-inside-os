@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft, Lock } from 'lucide-react';
+import { ArrowLeft, Lock, Sheet } from 'lucide-react';
 import { requireUser, isAdmin } from '@/lib/auth';
 import { createSupabaseServer } from '@/lib/supabase/server';
 import { effectiveCaps, CAPS, type TeamRole } from '@/lib/capabilities';
@@ -10,7 +10,7 @@ import { TaskSidebar } from '@/components/task/task-sidebar';
 import { AddComment } from '@/components/task/add-comment';
 import { ActivityTimeline } from '@/components/task/activity-timeline';
 import { Realtime } from '@/components/realtime';
-import { timeAgo } from '@/lib/utils';
+import { timeAgo, safeUrl } from '@/lib/utils';
 import type { Task } from '@/lib/types';
 
 export default async function TaskPage({ params }: { params: { tag: string } }) {
@@ -89,6 +89,12 @@ export default async function TaskPage({ params }: { params: { tag: string } }) 
             <div className="mt-1 text-xs text-fg-muted">
               Opened by {creator?.full_name || creator?.email || 'someone'} · {timeAgo(t.created_at)}
             </div>
+            {safeUrl(t.sheet_url) && (
+              <a href={safeUrl(t.sheet_url)!} target="_blank" rel="noopener noreferrer"
+                className="btn btn-outline btn-sm mt-3" style={{ color: 'hsl(152 58% 42%)' }}>
+                <Sheet className="h-4 w-4" /> Open Google Sheet
+              </a>
+            )}
             <div className="mt-4 border-t border-border pt-4">
               {t.description ? <Markdown>{t.description}</Markdown> : <p className="text-sm text-fg-muted">No description provided.</p>}
             </div>

@@ -1,30 +1,34 @@
 'use client';
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, Pencil, Trash2, Building2, Phone, Mail, IdCard, MapPin, User, Ticket } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Building2, Phone, Mail, IdCard, MapPin, User, Ticket, Sheet, UserPlus, X, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { PersonPicker } from '@/components/ui/person-picker';
 import { Avatar } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/toast';
 import { createCollege, updateCollege, deleteCollege } from '@/lib/actions/colleges';
+import { addCollegePerson, deleteCollegePerson } from '@/lib/actions/college-people';
 import { createTask } from '@/lib/actions/tasks';
-import { COLLEGE_STATUS_META, type College, type TaskPriority } from '@/lib/types';
+import { COLLEGE_STATUS_META, type College, type CollegePerson, type TaskPriority } from '@/lib/types';
+import { safeUrl } from '@/lib/utils';
 
 interface Member { email: string; full_name: string | null; }
 interface Form {
   name: string; city: string; caretaker_name: string; caretaker_email: string;
   caretaker_phone: string; designation: string; employee_id: string;
-  status: College['status']; notes: string;
+  status: College['status']; notes: string; sheet_url: string;
 }
 
 const EMPTY: Form = {
   name: '', city: '', caretaker_name: '', caretaker_email: '', caretaker_phone: '',
-  designation: '', employee_id: '', status: 'active', notes: ''
+  designation: '', employee_id: '', status: 'active', notes: '', sheet_url: ''
 };
 
-export function CollegesPanel({ teamId, colleges, canManage, canCreateTask, canAssign, members }:
-  { teamId: string; colleges: College[]; canManage: boolean; canCreateTask?: boolean; canAssign?: boolean; members: Member[] }) {
+const EMPTY_PERSON = { name: '', employee_id: '', mobile: '', email: '', designation: '' };
+
+export function CollegesPanel({ teamId, colleges, canManage, canCreateTask, canAssign, members, peopleByCollege }:
+  { teamId: string; colleges: College[]; canManage: boolean; canCreateTask?: boolean; canAssign?: boolean; members: Member[]; peopleByCollege: Record<string, CollegePerson[]> }) {
   const router = useRouter();
   const { toast } = useToast();
   const [pending, start] = useTransition();
@@ -36,6 +40,10 @@ export function CollegesPanel({ teamId, colleges, canManage, canCreateTask, canA
   // Raise-ticket dialog state
   const [ticketFor, setTicketFor] = useState<College | null>(null);
   const [tk, setTk] = useState({ title: '', description: '', priority: 'MEDIUM' as TaskPriority, due: '', assignee: '', notify: false });
+
+  // Add-person dialog state
+  const [personFor, setPersonFor] = useState<College | null>(null);
+  const [person, setPerson] = useState(EMPTY_PERSON);
 
   const filtered = useMemo(() => {
     const ql = q.toLowerCase();
@@ -51,7 +59,7 @@ export function CollegesPanel({ teamId, colleges, canManage, canCreateTask, canA
     setForm({
       name: c.name, city: c.city ?? '', caretaker_name: c.caretaker_name ?? '', caretaker_email: c.caretaker_email ?? '',
       caretaker_phone: c.caretaker_phone ?? '', designation: c.designation ?? '', employee_id: c.employee_id ?? '',
-      status: c.status, notes: c.notes ?? ''
+      status: c.status, notes: c.notes ?? '', sheet_url: c.sheet_url ?? ''
     });
     setOpen(true);
   }
@@ -92,6 +100,19 @@ export function CollegesPanel({ teamId, colleges, canManage, canCreateTask, canA
       if (r.ok) { toast(`Created ${r.data?.tag}`, 'success'); setTicketFor(null); router.push(`/tasks/${r.data?.tag}`); }
       else toast(r.error, 'error');
     });
+  }
+
+  function openPerson(c: College) { setPersonFor(c); setPerson(EMPTY_PERSON); }
+  function submitPerson() {
+    if (!personFor) return;
+    start(async () => {
+      const r = await addCollegePerson(personFor.id, person);
+      if (r.ok) { toast('Person added', 'success'); setPersonFor(null); router.refresh(); }
+      else toast(r.error, 'error');
+    });
+  }
+  function removePerson(id: string) {
+    start(async () => { const r = await deleteCollegePerson(id); if (r.ok) { toast('Removed', 'success'); router.refresh(); } else toast(r.error, 'error'); });
   }
 
   return (
@@ -143,8 +164,36 @@ export function CollegesPanel({ teamId, colleges, canManage, canCreateTask, canA
                 {c.caretaker_email && <div className="flex items-center gap-2 text-xs text-fg-muted"><Mail className="h-3 w-3" />{c.caretaker_email}</div>}
                 {c.caretaker_phone && <div className="flex items-center gap-2 text-xs text-fg-muted"><Phone className="h-3 w-3" />{c.caretaker_phone}</div>}
                 {c.employee_id && <div className="flex items-center gap-2 text-xs text-fg-muted"><IdCard className="h-3 w-3" />{c.employee_id}</div>}
+                {safeUrl(c.sheet_url) && (
+                  <a href={safeUrl(c.sheet_url)!} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium" style={{ color: 'hsl(152 58% 42%)' }}>
+                    <Sheet className="h-3.5 w-3.5" /> Open Google Sheet
+                  </a>
+                )}
                 {c.notes && <p className="mt-1 rounded-md bg-muted p-2 text-xs">{c.notes}</p>}
               </div>
+
+              {/* Take-care people */}
+              {(peopleByCollege[c.id]?.length || canManage) ? (
+                <div className="mt-3 border-t border-border pt-2">
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-fg-muted inline-flex items-center gap-1"><Users className="h-3 w-3" /> Take-cares</span>
+                    {canManage && <button onClick={() => openPerson(c)} className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1"><UserPlus className="h-3 w-3" /> Add</button>}
+                  </div>
+                  <div className="space-y-1">
+                    {(peopleByCollege[c.id] ?? []).map((p) => (
+                      <div key={p.id} className="flex items-center gap-2 rounded-md bg-muted/60 px-2 py-1 text-xs">
+                        <Avatar name={p.name} email={p.email} size={18} />
+                        <span className="font-medium">{p.name}</span>
+                        {p.designation && <span className="chip !py-0">{p.designation}</span>}
+                        <span className="text-fg-muted">{[p.employee_id, p.mobile].filter(Boolean).join(' · ')}</span>
+                        {canManage && <button onClick={() => removePerson(p.id)} className="ml-auto text-fg-muted hover:text-danger"><X className="h-3 w-3" /></button>}
+                      </div>
+                    ))}
+                    {(peopleByCollege[c.id] ?? []).length === 0 && <p className="text-xs text-fg-muted">No additional people.</p>}
+                  </div>
+                </div>
+              ) : null}
 
               {(canManage || canCreateTask) && (
                 <div className="mt-3 flex items-center gap-1 border-t border-border pt-2">
@@ -192,6 +241,11 @@ export function CollegesPanel({ teamId, colleges, canManage, canCreateTask, canA
             </div>
           </div>
 
+          <div>
+            <label className="label flex items-center gap-1"><Sheet className="h-3.5 w-3.5" /> Google Sheet link (optional)</label>
+            <input className="input" value={form.sheet_url} onChange={(e) => set('sheet_url', e.target.value)} placeholder="https://docs.google.com/spreadsheets/…" />
+          </div>
+
           <div><label className="label">Notes</label><textarea className="input min-h-20" value={form.notes ?? ''} onChange={(e) => set('notes', e.target.value)} placeholder="Anything the team should know about this college…" /></div>
 
           <div className="flex justify-end gap-2 pt-1">
@@ -231,6 +285,22 @@ export function CollegesPanel({ teamId, colleges, canManage, canCreateTask, canA
           <div className="flex justify-end gap-2 pt-1">
             <Button variant="ghost" onClick={() => setTicketFor(null)}>Cancel</Button>
             <Button loading={pending} onClick={submitTicket}>Create ticket</Button>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog open={!!personFor} onClose={() => setPersonFor(null)} title={`Add a take-care to ${personFor?.name ?? ''}`}>
+        <div className="space-y-3">
+          <div><label className="label">Name *</label><input autoFocus className="input" value={person.name} onChange={(e) => setPerson((s) => ({ ...s, name: e.target.value }))} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className="label">Employee ID</label><input className="input" value={person.employee_id} onChange={(e) => setPerson((s) => ({ ...s, employee_id: e.target.value }))} placeholder="NW00…" /></div>
+            <div><label className="label">Mobile</label><input className="input" value={person.mobile} onChange={(e) => setPerson((s) => ({ ...s, mobile: e.target.value }))} /></div>
+            <div><label className="label">Office email</label><input className="input" value={person.email} onChange={(e) => setPerson((s) => ({ ...s, email: e.target.value }))} /></div>
+            <div><label className="label">Designation</label><input className="input" value={person.designation} onChange={(e) => setPerson((s) => ({ ...s, designation: e.target.value }))} placeholder="BOA-1, PM…" /></div>
+          </div>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button variant="ghost" onClick={() => setPersonFor(null)}>Cancel</Button>
+            <Button loading={pending} onClick={submitPerson}>Add person</Button>
           </div>
         </div>
       </Dialog>

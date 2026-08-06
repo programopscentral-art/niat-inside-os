@@ -33,11 +33,18 @@ export default async function CollegesPage({ params }: { params: { key: string }
     supabase.from('team_members').select('profiles(email, full_name)').eq('team_id', team.id).eq('status', 'active')
   ]);
 
+  const collegeIds = (colleges ?? []).map((c: any) => c.id);
+  const peopleByCollege: Record<string, any[]> = {};
+  if (collegeIds.length) {
+    const { data: ppl } = await supabase.from('college_people').select('*').in('college_id', collegeIds);
+    for (const p of ppl ?? []) (peopleByCollege[p.college_id] ??= []).push(p);
+  }
+
   const memberList = (members ?? []).map((m: any) => ({ email: m.profiles?.email, full_name: m.profiles?.full_name })).filter((m: any) => m.email);
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
-      <Realtime channel={`colleges:${team.id}`} subs={[{ table: 'colleges', filter: `team_id=eq.${team.id}` }]} />
+      <Realtime channel={`colleges:${team.id}`} subs={[{ table: 'colleges', filter: `team_id=eq.${team.id}` }, { table: 'college_people' }]} />
       <Link href={`/teams/${team.team_key}`} className="inline-flex items-center gap-1.5 text-sm text-fg-muted hover:text-fg"><ArrowLeft className="h-4 w-4" /> Back to board</Link>
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
@@ -50,7 +57,7 @@ export default async function CollegesPage({ params }: { params: { key: string }
       </p>
 
       <CollegesPanel teamId={team.id} colleges={(colleges ?? []) as College[]} canManage={canManage}
-        canCreateTask={canCreateTask} canAssign={canAssign} members={memberList} />
+        canCreateTask={canCreateTask} canAssign={canAssign} members={memberList} peopleByCollege={peopleByCollege} />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { createSupabaseServer } from '@/lib/supabase/server';
 import { requireUser, requireCap } from '@/lib/auth';
 import { audit } from '@/lib/audit';
+import { safeUrl } from '@/lib/utils';
 
 type Result<T = undefined> = { ok: true; data?: T } | { ok: false; error: string };
 
@@ -16,7 +17,8 @@ const schema = z.object({
   designation: z.string().trim().max(60).optional().default(''),
   employee_id: z.string().trim().max(40).optional().default(''),
   status: z.enum(['active', 'on_hold', 'closed']).default('active'),
-  notes: z.string().trim().max(2000).optional().default('')
+  notes: z.string().trim().max(2000).optional().default(''),
+  sheet_url: z.string().trim().max(600).optional().default('')
 });
 
 const clean = (v: z.infer<typeof schema>) => ({
@@ -28,7 +30,8 @@ const clean = (v: z.infer<typeof schema>) => ({
   designation: v.designation || null,
   employee_id: v.employee_id || null,
   status: v.status,
-  notes: v.notes || null
+  notes: v.notes || null,
+  sheet_url: safeUrl(v.sheet_url)
 });
 
 export async function createCollege(teamId: string, input: z.infer<typeof schema>): Promise<Result<{ id: string }>> {

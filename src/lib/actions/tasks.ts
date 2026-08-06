@@ -5,6 +5,7 @@ import { createSupabaseServer } from '@/lib/supabase/server';
 import { requireUser, requireCap, canCap } from '@/lib/auth';
 import { audit } from '@/lib/audit';
 import { notify, resolveProfilesByEmail } from '@/lib/notify';
+import { safeUrl } from '@/lib/utils';
 
 type Result<T = undefined> = { ok: true; data?: T } | { ok: false; error: string };
 
@@ -16,6 +17,7 @@ const createSchema = z.object({
   assigneeEmail: z.string().trim().toLowerCase().optional().or(z.literal('')),
   dueDate: z.string().optional().or(z.literal('')),
   labels: z.array(z.string().trim()).max(12).default([]),
+  sheet_url: z.string().trim().max(600).optional().or(z.literal('')),
   notifyEmail: z.boolean().default(false)
 });
 
@@ -39,7 +41,7 @@ export async function createTask(input: z.infer<typeof createSchema>): Promise<R
   const { data: task, error } = await supabase.from('tasks').insert({
     team_id: v.teamId, title: v.title, description: v.description || null,
     priority: v.priority, assignee_id: assigneeId,
-    due_date: v.dueDate || null, labels: v.labels, created_by: user.id
+    due_date: v.dueDate || null, labels: v.labels, sheet_url: safeUrl(v.sheet_url), created_by: user.id
   }).select('id, tag, team_id').single();
   if (error) return { ok: false, error: error.message };
 
@@ -68,7 +70,8 @@ const patchSchema = z.object({
   description: z.string().trim().max(8000).optional(),
   remarks: z.string().trim().max(2000).optional(),
   due_date: z.string().nullable().optional(),
-  labels: z.array(z.string().trim()).max(12).optional()
+  labels: z.array(z.string().trim()).max(12).optional(),
+  sheet_url: z.string().trim().max(600).nullable().optional()
 });
 
 export async function updateTask(taskId: string, patch: z.infer<typeof patchSchema>): Promise<Result> {
@@ -86,6 +89,7 @@ export async function updateTask(taskId: string, patch: z.infer<typeof patchSche
   }
   const clean = { ...parsed.data };
   if (parsed.data.status === 'DONE') (clean as any).progress = 100;
+  if ('sheet_url' in parsed.data) (clean as any).sheet_url = safeUrl(parsed.data.sheet_url);
 
   const { error } = await supabase.from('tasks').update(clean).eq('id', taskId);
   if (error) return { ok: false, error: 'Not permitted or invalid update.' };

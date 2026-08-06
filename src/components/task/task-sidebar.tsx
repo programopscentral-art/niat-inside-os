@@ -27,6 +27,7 @@ export function TaskSidebar({ task, caps, members, watchers, assignee, currentUs
   const [progress, setProgress] = useState(task.progress);
   const [due, setDue] = useState(task.due_date ?? '');
   const [remarks, setRemarks] = useState(task.remarks ?? '');
+  const [sheet, setSheet] = useState(task.sheet_url ?? '');
   const [emailOnTag, setEmailOnTag] = useState(false);
 
   function run(fn: () => Promise<{ ok: boolean; error?: string }>, okMsg: string) {
@@ -66,6 +67,13 @@ export function TaskSidebar({ task, caps, members, watchers, assignee, currentUs
           <label className="label">Due date</label>
           <input type="date" className="input" value={due} disabled={!canEdit}
             onChange={(e) => { setDue(e.target.value); run(() => updateTask(task.id, { due_date: e.target.value || null }), 'Due date updated'); }} />
+        </div>
+        <div>
+          <label className="label">Google Sheet link</label>
+          <input className="input" value={sheet} disabled={!canEdit}
+            placeholder="https://docs.google.com/spreadsheets/…"
+            onChange={(e) => setSheet(e.target.value)}
+            onBlur={() => canEdit && sheet !== (task.sheet_url ?? '') && run(() => updateTask(task.id, { sheet_url: sheet }), 'Sheet link saved')} />
         </div>
       </div>
 
